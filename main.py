@@ -29,6 +29,7 @@ async def on_chat_start():
                 "application/pdf": [".pdf"],
             },
             max_size_mb=50,
+            max_files=10,
             timeout=300,
         ).send()
 

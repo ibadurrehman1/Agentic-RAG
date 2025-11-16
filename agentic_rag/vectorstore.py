@@ -20,7 +20,7 @@ class VectorStoreBuilder:
             documents=doc_splits,
             embedding=self._embeddings,
         )
-        self._retriever = self._vectorstore.as_retriever()
+        self._retriever = self._vectorstore.as_retriever(search_kwargs={"k": 10})
         return self
 
     def retriever(self):

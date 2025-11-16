@@ -22,6 +22,14 @@ def _get_last_human_content(messages: List[Any]) -> str:
     return getattr(messages[0], "content", "")
 
 
+def _get_messages_till_last_human(messages: List[Any]) -> List[Any]:
+    for m in reversed(messages):
+        role = getattr(m, "type", None) or getattr(m, "role", None)
+        if role in ("human", "user"):
+            return messages[: messages.index(m) + 1]
+    return messages
+
+
 def make_generate_query_or_respond(response_model, retriever_tool, CustomState):
     def generate_query_or_respond(state: CustomState) -> Dict[str, Any]:
 
@@ -47,11 +55,12 @@ def make_grade_documents(grader_model, CustomState):
     def grade_documents(
         state: CustomState,
     ) -> Literal["generate_answer", "rewrite_question"]:
-        question = _get_last_human_content(state["messages"])
+        question = _get_messages_till_last_human(state["messages"])
         context = state["messages"][-1].content
-        prompt = GRADE_PROMPT.format(question=question, context=context)
+
+        prompt = GRADE_PROMPT.format(context=context)
         response = grader_model.with_structured_output(_GradeDocuments).invoke(
-            [{"role": "user", "content": prompt}]
+            question + [{"role": "ai", "content": prompt}]
         )
         score = response.binary_score
         return "generate_answer" if score == "yes" else "rewrite_question"
@@ -65,7 +74,9 @@ def make_rewrite_question(response_model, CustomState):
         question = _get_last_human_content(messages)
         prompt = REWRITE_PROMPT.format(question=question)
         response = response_model.invoke([{"role": "user", "content": prompt}])
-        return {"messages": [{"type": "human", "content": response.content}]}
+
+        context = response.content + "\n\n" + "Never try to answer of your own."
+        return {"messages": [{"type": "ai", "content": context}]}
 
     return rewrite_question
 
