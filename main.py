@@ -120,30 +120,54 @@ async def on_message(message: cl.Message):
                 artifacts = payload["generate_answer"].get("artifacts", [])
                 collected_artifacts.extend(artifacts)
 
-    # ---- Attach Sources (if any) ----
-    source_elements = []
-
+    # Collect unique files and their relevant page numbers from artifacts
+    file_pages = {}
     if collected_artifacts:
         for doc in collected_artifacts:
-            filename = doc.metadata["source"].split("\\")[-1]
-            element_name = f"{filename} (Page {doc.metadata['page']+1})"
+            filepath = doc.metadata.get("source", "")
+            filename = (
+                filepath.split("\\")[-1]
+                if "\\" in filepath
+                else filepath.split("/")[-1]
+            )
+            page_number = doc.metadata.get("page", None)
+            if filename not in file_pages:
+                file_pages[filename] = {"filepath": filepath, "pages": set()}
+            if page_number is not None:
+                file_pages[filename]["pages"].add(
+                    str(page_number + 1)
+                    if isinstance(page_number, int)
+                    else str(page_number)
+                )
 
-            source_elements.append(
-                cl.Text(
-                    content=doc.page_content,
-                    name=element_name,
+        if file_pages:
+            # Build 'Sources' section with page numbers
+            source_lines = []
+            for name, info in file_pages.items():
+                if info["pages"]:
+                    pages_sorted = sorted(
+                        info["pages"], key=lambda x: int(x) if x.isdigit() else x
+                    )
+                    source_lines.append(f"{name} Pages: {', '.join(pages_sorted)}")
+                else:
+                    source_lines.append(name)
+            source_text = "\n\nSources:\n - " + "\n - ".join(source_lines)
+            await response_msg.stream_token(source_text)
+
+    # Optionally, attach PDFs as elements (uses cl.pdf)
+    pdf_elements = []
+    for filename, info in file_pages.items():
+        filepath = info["filepath"]
+        if filename.lower().endswith(".pdf"):
+            pdf_elements.append(
+                cl.Pdf(
+                    name=filename,
+                    path=filepath,
                     display="side",
                 )
             )
-
-        # Build "Sources" section
-        source_text = "\n\nSources:\n - " + "\n - ".join(
-            [elem.name for elem in source_elements]
-        )
-        await response_msg.stream_token(source_text)
-
-    if source_elements:
-        response_msg.elements = source_elements
+    if pdf_elements:
+        response_msg.elements = pdf_elements
 
     await response_msg.update()
 
