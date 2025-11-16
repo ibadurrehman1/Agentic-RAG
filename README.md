@@ -85,11 +85,16 @@ The application will open in your browser at `http://localhost:8000`.
 ### Using the Interface
 
 1. **Upload Documents**: When the app starts, you'll be prompted to upload medical transcript files (.pdf, .txt, .md, .csv, .json)
+   - **To test the application**: Upload the file from `docs/medical_transcript.pdf`
 2. **Wait for Indexing**: The system will process and index your documents
 3. **Ask Questions**: Once indexed, ask questions about the uploaded documents
 4. **View Sources**: The system will automatically show source citations with page numbers
 
 ### Example Questions
+
+Test the application with these prompts after uploading `docs/medical_transcript.pdf`:
+
+Example questions:
 
 - "What medications were discussed?"
 - "What was the patient's diagnosis?"
