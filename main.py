@@ -23,7 +23,7 @@ async def on_chat_start():
     # Ask user for documents
     while uploaded_files is None:
         uploaded_files = await cl.AskFileMessage(
-            content="Upload medical transcript files (.pdf, .txt, .md, .csv, .json).\nThen ask your question.",
+            content="Welcome to the Medical Transcript Analysis System. Please upload patient-doctor conversation transcripts or medical documents (.pdf, .txt, .md, .csv, .json).\n\nAfter uploading, you can ask questions about diagnoses, treatments, medications, or any other medical information from the documents.",
             accept={
                 "text/plain": [".txt", ".md", ".csv", ".json"],
                 "application/pdf": [".pdf"],
@@ -34,7 +34,9 @@ async def on_chat_start():
 
     file_paths = [f.path for f in uploaded_files]
 
-    status_msg = cl.Message(content="Indexing documents...")
+    status_msg = cl.Message(
+        content="Processing medical documents and building knowledge base..."
+    )
     await status_msg.send()
 
     # ---- Document Loading & Chunking ----
@@ -69,7 +71,7 @@ async def on_chat_start():
     cl.user_session.set("graph", graph)
     cl.user_session.set("retriever", retriever)
 
-    status_msg.content = "Documents indexed. You can now ask questions."
+    status_msg.content = "Medical documents have been successfully indexed. You can now ask questions about patient records, diagnoses, treatments, medications, or any other medical information from the uploaded documents."
     await status_msg.update()
 
 
@@ -80,7 +82,7 @@ async def on_message(message: cl.Message):
 
     if graph is None:
         await cl.Message(
-            content="System not initialized. Please restart and upload files."
+            content="Medical analysis system not initialized. Please restart the session and upload medical transcript files."
         ).send()
         return
 
