@@ -88,7 +88,13 @@ async def on_message(message: cl.Message):
 
     response_msg = cl.Message(content="")
 
+    response_msg.content = "Thinking..."
+
+    await response_msg.send()
+
     collected_artifacts = []
+
+    is_thinking = True
 
     # Stream responses from the graph
     for stream_type, payload in graph.stream(
@@ -103,6 +109,10 @@ async def on_message(message: cl.Message):
                 "generate_answer",
                 "generate_query_or_respond",
             ]:
+                if is_thinking:
+                    is_thinking = False
+                    response_msg.content = ""
+                    await response_msg.update()
                 await response_msg.stream_token(chunk.content)
 
         elif stream_type == "updates":
@@ -116,7 +126,7 @@ async def on_message(message: cl.Message):
     if collected_artifacts:
         for doc in collected_artifacts:
             filename = doc.metadata["source"].split("\\")[-1]
-            element_name = f"{filename} (Page {doc.metadata['page']})"
+            element_name = f"{filename} (Page {doc.metadata['page']+1})"
 
             source_elements.append(
                 cl.Text(
