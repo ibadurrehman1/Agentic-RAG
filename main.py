@@ -41,7 +41,7 @@ async def on_chat_start():
     fetcher = DocumentFetcher()
     raw_documents = fetcher.fetch_from_paths(file_paths)
 
-    preprocessor = TextPreprocessor(chunk_size=100, chunk_overlap=50)
+    preprocessor = TextPreprocessor(chunk_size=800, chunk_overlap=200)
     chunks = preprocessor.split(raw_documents)
 
     # ---- Embeddings & VectorStore ----

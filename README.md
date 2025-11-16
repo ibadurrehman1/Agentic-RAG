@@ -125,14 +125,7 @@ The system uses a LangGraph workflow with the following nodes:
 4. **`rewrite_question`**: Improves the question if retrieval was insufficient
 5. **`generate_answer`**: Generates the final answer using retrieved context
 
-```
-START → generate_query_or_respond
-         ├─→ [No tool needed] → END
-         └─→ [Tool needed] → retrieve_documents
-                            → grade_documents
-                            ├─→ [Relevant] → generate_answer → END
-                            └─→ [Not relevant] → rewrite_question → generate_query_or_respond (loop)
-```
+![Workflow Graph](graph.png)
 
 ## 🔧 Configuration
 
@@ -157,13 +150,13 @@ All prompts are centralized in `agentic_rag/prompt.py`:
 In `main.py`, adjust text preprocessing:
 
 ```python
-preprocessor = TextPreprocessor(chunk_size=100, chunk_overlap=50)
+preprocessor = TextPreprocessor(chunk_size=800, chunk_overlap=200)
 ```
 
 - `chunk_size`: Maximum characters per chunk
 - `chunk_overlap`: Overlap between chunks for context preservation
 
-## 📚 Key Components
+## 📚 Key ComponentsComponents
 
 ### ModelFactory (`models.py`)
 
